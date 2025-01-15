@@ -14,10 +14,6 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    verificationCode: {
-      type: String,
-      required: true,
-    },
     // till yet fields are required
     age: {
       type: Number,
@@ -45,9 +41,11 @@ const UserSchema = new mongoose.Schema(
       {
         providerName: {
           type: String,
+          unique:true
         },
         providerId: {
           type: String,
+          unique:true
         },
       },
     ],

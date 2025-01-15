@@ -1,6 +1,6 @@
 import { transporter } from "../middlewares/nodemailer.js";
 import { Verification_Email_Template } from "../utils/Email_Template.js";
-export const VarifyEmail = async (email, varificationCode) => {
+export const SendVarificationCode = async (email, varificationCode) => {
   try {
     const response = await transporter.sendMail({
       from: process.env.QUICK_CHAT_EMAIL_ADDRESSS,
