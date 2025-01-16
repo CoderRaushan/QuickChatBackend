@@ -4,5 +4,4 @@ const router = express.Router();
 router.post('/api/SendEmail',SendVarificationCodeToUserEmail);
 router.post('/api/register',ManualRegister);
 router.post('/api/login',Login);
-
 export default router;

@@ -3,9 +3,22 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import UserRouter from "./routes/UserRoute.js"
 dotenv.config();
 const app = express();
+import UserRouter from "./routes/UserRoute.js";
+// passport configurations for google
+import passport from "passport";
+import googleRoute from "./routes/googleRoutes.js";
+import './config/passportGoogle.js';
+app.use(passport.initialize());
+app.use(googleRoute);
+// for github
+import githubRoutes from "./routes/githubRoutes.js";
+import './config/passportGitHub.js';
+app.use(githubRoutes);
+// for facebook
+
+// end pasport config
 app.use(express.json());
 app.use(cookieParser());
 app.use(urlencoded({extended:true}));
@@ -14,7 +27,6 @@ const corsOptions={
     credentials:true,
 }
 app.use(cors(corsOptions));
-
 const MONGODB_URI = process.env.MONGODB_URI;
 try {
   mongoose.connect(MONGODB_URI).then(() => {
