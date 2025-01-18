@@ -1,14 +1,11 @@
 // import jwt from 'jsonwebtoken';
 
-// export const generateToken = (user) => {
-//   return jwt.sign(
-//     { id: user._id, name: user.name, email: user.email, photo: user.photo },
-//     process.env.JWT_SECRET,
-//     { expiresIn: '7d' }
-//   );
-// };
-
+import jwtTokenFunction from "../Jwt/JwtToken.js";
 export const sendTokenResponse = (user, res) => {
-//   const token = generateToken(user);
+  if (user)
+    {
+      console.log(user);
+      jwtTokenFunction(user._id, user.username, user.email,user.profilePicture, res);
+    }
   res.status(200).json({ success: true, user });
 };

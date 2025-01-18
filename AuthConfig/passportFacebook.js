@@ -3,7 +3,6 @@ import { Strategy as FacebookStrategy } from "passport-facebook";
 import User from "../models/UserModel.js";
 import dotenv from "dotenv";
 dotenv.config();
-
 passport.use(
   new FacebookStrategy(
     {
@@ -47,5 +46,4 @@ passport.use(
     }
   )
 );
-
 export default passport;

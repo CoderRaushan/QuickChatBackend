@@ -9,15 +9,19 @@ import UserRouter from "./routes/UserRoute.js";
 // passport configurations for google
 import passport from "passport";
 import googleRoute from "./routes/googleRoutes.js";
-import './config/passportGoogle.js';
+import './AuthConfig/passportGoogle.js';
 app.use(passport.initialize());
 app.use(googleRoute);
 // for github
 import githubRoutes from "./routes/githubRoutes.js";
-import './config/passportGitHub.js';
+import './AuthConfig/passportGitHub.js';
 app.use(githubRoutes);
 // for facebook
 
+// for linkedin
+import "./AuthConfig/passportLinkedin.js";
+import LinkedinRoutes from "./routes/LinkedinRoutes.js"
+app.use(LinkedinRoutes);
 // end pasport config
 app.use(express.json());
 app.use(cookieParser());

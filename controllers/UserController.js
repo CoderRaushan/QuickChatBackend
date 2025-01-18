@@ -2,6 +2,7 @@ import { WelComeMessage } from "../middlewares/WelComeEmail.js";
 import User from "../models/UserModel.js";
 import VerificationCode from "../models/VerificationCodeModel.js"
 import { SendVarificationCode } from "../middlewares/VarifyEmail.js";
+import jwtTokenFunction from "../Jwt/JwtToken.js";
 
 export const SendVarificationCodeToUserEmail = async (req, res) => {
   try {
@@ -111,7 +112,8 @@ export const ManualRegister = async (req, res) => {
 };
 
 
-export const Login = async (req, res) => {
+export const Login = async (req, res) => 
+{
   const { email, password } = req.body;
   try {
     if (!email || !password) {
@@ -124,10 +126,10 @@ export const Login = async (req, res) => {
       return res.status(400).json({ error: "Invalid user credential!" });
     }
 
-    // if (user)
-    // {
-    //   jwtTokenFunction(user._id, user.name, user.email,user.photo, res);
-    // }
+    if (user)
+    {
+      jwtTokenFunction(user._id, user.username, user.email,user.profilePicture, res);
+    }
 
     return res.status(200).json({
       message: "User logged in successfully!",
