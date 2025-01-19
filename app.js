@@ -39,7 +39,8 @@ try {
 } catch (err) {
     console.log("Mongodb connections error!",err);
 }
-app.use('/account',UserRouter);
+app.use('/auth',UserRouter);
+app.use('/user',UserRouter);
 const port = process.env.PORT || 4234;
 app.listen(port, () => {
   console.log(`app is listening on port http://localhost:${port}`);
