@@ -3,6 +3,7 @@ import User from "../models/UserModel.js";
 import VerificationCode from "../models/VerificationCodeModel.js"
 import { SendVarificationCode } from "../middlewares/VarifyEmail.js";
 import jwtTokenFunction from "../Jwt/JwtToken.js";
+import Post from "../models/PostModel.js";
 
 export const SendVarificationCodeToUserEmail = async (req, res) => {
   try {
@@ -128,12 +129,27 @@ export const Login = async (req, res) => {
     if (user) {
       jwtTokenFunction(user._id, user.username, user.email, user.profilePicture, res);
     }
-    return res.status(200).json({
-      message: "User logged in successfully!",
+    const populatedPosts = await Promise.all(
+      user.posts.map(async (postId) => {
+        const post = await Post.findById(postId);
+        if (post && post.author.equals(user._id)) {
+          return post;
+        }
+        return null;
+      })
+    );
+    const logedinUser={
       _id: user._id,
       name: user.name,
       email: user.email,
-      // photo: user.photo,
+      profilePicture: user.profilePicture,
+      followers:user.followers,
+      following:user.following,
+      posts:populatedPosts,
+    }
+    return res.status(200).json({
+      message: "User logged in successfully!",
+      logedinUser
     });
   } catch (error) {
     console.error("Login error:", error);

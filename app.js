@@ -6,6 +6,8 @@ import cors from "cors";
 dotenv.config();
 const app = express();
 import UserRouter from "./routes/UserRoute.js";
+import PostRouter from "./routes/PostRoutes.js";
+import MessageRouter from "./routes/MessageRoutes.js";
 // passport configurations for google
 import passport from "passport";
 import googleRoute from "./routes/googleRoutes.js";
@@ -41,6 +43,8 @@ try {
 }
 app.use('/auth',UserRouter);
 app.use('/user',UserRouter);
+app.use("/user/post",PostRouter);
+app.use("/user/message",MessageRouter);
 const port = process.env.PORT || 4234;
 app.listen(port, () => {
   console.log(`app is listening on port http://localhost:${port}`);

@@ -2,7 +2,6 @@ import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import dotenv from "dotenv";
-import User from '../models/UserModel.js';
 dotenv.config();
 //config cloudinary with credentials
 cloudinary.config({
