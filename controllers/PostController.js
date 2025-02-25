@@ -1,39 +1,62 @@
 import Post from "../models/PostModel.js";
 import User from "../models/UserModel.js";
+import Comment from "../models/CommentModel.js";
 //add new post
 export const AddNewPost = async (req, res) => {
   try {
     const { caption } = req.body;
-    const PostPicture = req.file.path;
     const author = req.id;
-    if (!caption || PostPicture || author) {
+    if (!req.file) {
+      return res.status(400).json({
+        message: "Image is required",
+        success: false,
+      });
+    }
+    
+    const PostPicture = req.file.path;
+    if (!caption || !PostPicture || !author) {
       return res.status(400).json({
         message: "Please fill in all fields",
-        success: false
+        success: false,
       });
     }
-    const post = await Post.create
-      ({
-        caption,
-        image: PostPicture,
-        author,
-      });
-    await post.populate({ path: 'author', select: "-password" })
-    const user = User.findById(author);
-    if (user) {
-      user.posts.push(post._id);
-      await user.save();
-      res.status(201).json({
-        message: "Post created successfully",
-        success: true,
-        post
+
+    // Create the post
+    const post = await Post.create({
+      caption,
+      image: PostPicture,
+      author,
+    });
+
+    // Populate author field (excluding password)
+    await post.populate({ path: "author", select: "-password" });
+
+    // Find the user by ID
+    const user = await User.findById(author);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
       });
     }
+
+    // Push post ID to user's posts array
+    user.posts.push(post._id);
+    await user.save();
+
+    res.status(201).json({
+      message: "Post created successfully",
+      success: true,
+      post,
+    });
+
   } catch (error) {
-    res.status(500).json
-      ({
-        message: "internal server error!",
-      })
+    console.error("Error creating post:", error.message);
+    res.status(500).json({
+      message: "Internal server error",
+      success: false,
+      error: error.message,
+    });
   }
 };
 //getall posts
@@ -45,8 +68,9 @@ export const GetAllPosts = async (req, res) => {
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
+      message:"Posts Fetched Successfully!",
+      success: true,
       posts,
-      success: true
     });
   } catch (error) {
     console.log(error);
@@ -62,12 +86,13 @@ export const GetUserPost = async (req, res) => {
     const authorId = req.id;
     const posts = await Post.find({ author: authorId })
       .populate({ path: 'author', select: 'username profilePicture' })
-      .populate({ path: 'comments', populate: { path: 'author', select: 'username profilePicture' } })
+      .populate({ path: 'comments',model: "Comment", populate: { path: 'author', select: 'username profilePicture' } })
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
-      posts,
-      success: true
+      message:"All User Posts Fetched Successfully!",
+      success: true,
+      posts
     });
   } catch (error) {
     console.log(error);
@@ -141,7 +166,8 @@ export const AddComment = async (req, res) => {
     const postId = req.params.id;
     const commentKrneWalaUserKiId = req.id;
     const { text } = req.body;
-    if (!text) {
+    if (!text) 
+    {
       return res.status(400).json({
         message: 'Text is required',
         success: false
@@ -162,7 +188,7 @@ export const AddComment = async (req, res) => {
       post: postId
     });
 
-    await comment.populate({ path: 'author', select: 'username profilePicture' }).execPopulate();
+    await comment.populate({ path: 'author', select: 'username profilePicture' });
 
     post.comments.push(comment._id);
     await post.save();
@@ -219,16 +245,12 @@ export const DeletePost = async (req, res) => {
         success: false
       });
     }
-
-    // Check if the logged-in user is the owner of the post
     if (post.author.toString() !== authorId) {
       return res.status(403).json({
         message: 'You can not delete this post you are not author of this post!',
         success: false
       });
     }
-
-    // Delete post
     await Post.findByIdAndDelete(postId);
 
     // Remove the post id from the user's posts
@@ -241,7 +263,8 @@ export const DeletePost = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Post deleted'
+      message: 'Post deleted',
+      
     });
   } catch (error) {
     console.log(error);

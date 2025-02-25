@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import Comment from "../models/CommentModel.js";
+import User from "./UserModel.js";
 const postSchema = new mongoose.Schema({
   caption: { type: String, default: "" },
   image: { type: String, required: true },
@@ -7,5 +9,5 @@ const postSchema = new mongoose.Schema({
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
 });
 
- const Post = mongoose.model("Post", postSchema);
- export default Post;
+const Post = mongoose.model("Post", postSchema);
+export default Post;

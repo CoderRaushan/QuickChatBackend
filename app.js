@@ -24,6 +24,10 @@ app.use(githubRoutes);
 import "./AuthConfig/passportLinkedin.js";
 import LinkedinRoutes from "./routes/LinkedinRoutes.js"
 app.use(LinkedinRoutes);
+// for github
+import youtubeRoutes from "./routes/YoutubeRoutes.js";
+import './AuthConfig/passportYoutube.js';
+app.use(youtubeRoutes);
 // end pasport config
 app.use(express.json());
 app.use(cookieParser());

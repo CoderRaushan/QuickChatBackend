@@ -26,7 +26,7 @@ export const SendVarificationCodeToUserEmail = async (req, res) => {
     res.status(201).json({
       message: "Verification Code has been sent to your email. Please check your inbox!",
       success: true,
-      VarCode  //to remove
+      VarCode
     });
   } catch (err) {
     res.status(500).json({
@@ -39,16 +39,15 @@ export const SendVarificationCodeToUserEmail = async (req, res) => {
 
 export const ManualRegister = async (req, res) => {
   try {
-    const { username, email, VarificationCode, age, password } = req.body;
-
+    const { username, email, Varcode, age, password } = req.body;
     // Check for missing fields
-    if (!username || !email || !password || !VarificationCode || !age) {
+    if (!username || !email || !password || !Varcode || !age) {
       return res.status(401).json({
         message: "Please fill all the fields",
         success: false,
       });
     }
-
+    //  console.log(VarificationCode);
     // Fetch verification code for the email
     const VarCodeEntry = await VerificationCode.findOne({ email });
 
@@ -61,7 +60,7 @@ export const ManualRegister = async (req, res) => {
     }
 
     // Verify the provided code
-    if (VarCodeEntry.VerfiCode !== VarificationCode) {
+    if (VarCodeEntry.VerfiCode != Varcode) {
       return res.status(400).json({
         message: "Invalid verification code!",
         success: false,
@@ -114,18 +113,38 @@ export const ManualRegister = async (req, res) => {
   }
 };
 
+export const IsEmailFound = async (req, res) => {
+  const email = req.body.email;
+  try {
+    if (!email) {
+      return res.status(400).json({ error: "Email is required!" });
+    }
+    const user = await User.findOne({ email }).select("IsVerified");
+    if (user) {
+      return res.status(200).json({ message: "User found!", success: true, user });
+    }
+    return res.status(404).json({ message: "User not found!", success: false });
+  } catch (error) {
+    console.error("IsEmailFound error:", error);
+    return res.status(500).json({ error: "Internal server error!", success: false });
+  }
+};
+
 export const Login = async (req, res) => {
   const { email, password } = req.body;
   try {
     if (!email || !password) {
-      return res.status(400).json({ error: "All fields are required!" });
+      return res.status(400).json({ error: "All fields are required!", success: false });
     }
     const user = await User.findOne({ email });
     //!(await bcrypt.compare(password, user.password)
     if (!user) {
-      return res.status(400).json({ error: "Invalid user credential!" });
+      return res.status(400).json({ error: "Invalid user credential!", success: false });
     }
-
+    // Check if user is password is correct or not
+    if (password !== user.password) {
+      return res.status(400).json({ error: "Invalid user credential!", success: false });
+    }
     if (user) {
       jwtTokenFunction(user._id, user.username, user.email, user.profilePicture, res);
     }
@@ -138,18 +157,20 @@ export const Login = async (req, res) => {
         return null;
       })
     );
-    const logedinUser={
+    const logedinUser = {
       _id: user._id,
-      name: user.name,
+      name: user.username,
       email: user.email,
       profilePicture: user.profilePicture,
-      followers:user.followers,
-      following:user.following,
-      posts:populatedPosts,
+      bio:user.bio,
+      followers: user.followers,
+      following: user.following,
+      posts: populatedPosts,
     }
     return res.status(200).json({
       message: "User logged in successfully!",
-      logedinUser
+      success: true,
+      user:logedinUser
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -171,7 +192,7 @@ export const signout = async (req, res) => {
   }
   catch (error) {
     console.log("error", error);
-    return res.status(500).json({ error: "Internal server error!" });
+    return res.status(500).json({ error: "Internal server error!", success: false });
   }
 };
 
@@ -185,41 +206,41 @@ export const GetProfile = async (req, res) => {
     return res.status(200).json({ user, success: true });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Internal server error!" });
+    return res.status(500).json({ error: "Internal server error!", success: false });
   }
 };
-export const EditProfile=async(req,res)=>
-{
+export const EditProfile = async (req, res) => {
   try {
-  const {username,age,bio,gender}=req.body;
-  let profilePic;
-  if (req.file) {
-    profilePic = req.file.path; // Path of the uploaded file
-  }
-  if (!username && !age && !bio && !gender && !profilePic) {
-    return res.status(400).json({
-      message: "No fields to update provided",
-      success: false,
-    });
-  }
-  const updatedUser = await User.findByIdAndUpdate(
-    req.id, 
-    { 
-      ...(username && { username }), 
-      ...(age && { age }),
-      ...(bio && { bio }),
-      ...(gender && { gender }),
-      ...(profilePic && { profilePicture: profilePic }),
-    },
-    { new: true, runValidators: true } // Return updated user and run validations
-  ).select("-password"); // Exclude sensitive fields like password
-  if(!updatedUser)
-    {
+    const { username, age, bio, gender } = req.body;
+    let profilePic;
+    if (req.file) {
+      profilePic = req.file.path; 
+      console.log(profilePic);
+    }
+    if (!username && !age && !bio && !gender && !profilePic) {
+      return res.status(400).json({
+        message: "No fields to update provided",
+        success: false,
+      });
+    }
+    const updatedUser = await User.findByIdAndUpdate(
+      req.id,
+      {
+        ...(username && { username }),
+        ...(age && { age }),
+        ...(bio && { bio }),
+        ...(gender && { gender }),
+        ...(profilePic && { profilePicture: profilePic }),
+      },
+      { new: true, runValidators: true } // Return updated user and run validations
+    ).select("-password"); // Exclude sensitive fields like password
+    if (!updatedUser) {
       return res.status(404).json(
-        { message: "User not found!",
-           success: false,
-           userid:req.id
-          });
+        {
+          message: "User not found!",
+          success: false,
+          userid: req.id
+        });
     }
     return res.status(200).json({
       message: "Profile updated successfully",
@@ -261,9 +282,9 @@ export const FollowAndUnfollow = async (req, res) => {
   try {
     console.log("entered in followOrUnfollow controler");
     const IdOfUserWhichFollowsTargetUser = req.id;
-    console.log("user 1",IdOfUserWhichFollowsTargetUser);
+    console.log("user 1", IdOfUserWhichFollowsTargetUser);
     const IdOfTheTargetUser = req.params.id;
-    console.log("IdOfTheTargetUser ",IdOfTheTargetUser);
+    console.log("IdOfTheTargetUser ", IdOfTheTargetUser);
     if (!IdOfUserWhichFollowsTargetUser || !IdOfTheTargetUser) {
       return res.status(400).json({
         message: 'user id not found!',
