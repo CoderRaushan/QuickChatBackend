@@ -39,9 +39,9 @@ export const SendVarificationCodeToUserEmail = async (req, res) => {
 
 export const ManualRegister = async (req, res) => {
   try {
-    const { username, email, Varcode, age, password } = req.body;
+    const { username, email, Varcode, age, password, name } = req.body;
     // Check for missing fields
-    if (!username || !email || !password || !Varcode || !age) {
+    if (!username || !email || !password || !Varcode || !age || !name) {
       return res.status(401).json({
         message: "Please fill all the fields",
         success: false,
@@ -85,6 +85,7 @@ export const ManualRegister = async (req, res) => {
     // Register the user
     const newUser = new User({
       username,
+      name,
       email,
       password,
       age,
@@ -159,10 +160,12 @@ export const Login = async (req, res) => {
     );
     const logedinUser = {
       _id: user._id,
-      name: user.username,
+      username: user.username,
+      name: user.name,
+      age: user.age,
       email: user.email,
       profilePicture: user.profilePicture,
-      bio:user.bio,
+      bio: user.bio,
       followers: user.followers,
       following: user.following,
       posts: populatedPosts,
@@ -170,7 +173,7 @@ export const Login = async (req, res) => {
     return res.status(200).json({
       message: "User logged in successfully!",
       success: true,
-      user:logedinUser
+      user: logedinUser
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -199,13 +202,24 @@ export const signout = async (req, res) => {
 export const GetProfile = async (req, res) => {
   try {
     const userId = req.params.id;
-    const user = await User.findById(userId).select("-password");
+
+    const user = await User.findById(userId)
+      .populate({ path: "posts", options: { sort: { createdAt: -1 } }, populate: [
+        { path: "author", select: "username profilePicture"},
+        { path: "comments",
+          populate: { path: "author", select: "username profilePicture" } 
+        }
+      ]})
+      .populate({ path: "bookmarks", options: { sort: { createdAt: -1 } } })
+      .select("-password"); 
     if (!user) {
       return res.status(404).json({ message: "User not found!", success: false });
     }
+
     return res.status(200).json({ user, success: true });
+
   } catch (error) {
-    console.log(error);
+    console.error("Error in GetProfile:", error.message);
     return res.status(500).json({ error: "Internal server error!", success: false });
   }
 };
@@ -214,7 +228,7 @@ export const EditProfile = async (req, res) => {
     const { username, age, bio, gender } = req.body;
     let profilePic;
     if (req.file) {
-      profilePic = req.file.path; 
+      profilePic = req.file.path;
       console.log(profilePic);
     }
     if (!username && !age && !bio && !gender && !profilePic) {
@@ -266,6 +280,7 @@ export const getSuggestedUsers = async (req, res) => {
       });
     }
     return res.status(200).json({
+      message: "All Suggested Users Fetched!",
       success: true,
       users: suggestedUsers
     });
@@ -280,7 +295,6 @@ export const getSuggestedUsers = async (req, res) => {
 // follow Or unfollow logic
 export const FollowAndUnfollow = async (req, res) => {
   try {
-    console.log("entered in followOrUnfollow controler");
     const IdOfUserWhichFollowsTargetUser = req.id;
     console.log("user 1", IdOfUserWhichFollowsTargetUser);
     const IdOfTheTargetUser = req.params.id;

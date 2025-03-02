@@ -17,7 +17,7 @@ export const AddNewPost = async (req, res) => {
     if (!caption || !PostPicture || !author) {
       return res.status(400).json({
         message: "Please fill in all fields",
-        success: false,
+        success: false, 
       });
     }
 
@@ -63,12 +63,12 @@ export const AddNewPost = async (req, res) => {
 export const GetAllPosts = async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate({ path: 'author', select: 'username profilePicture' })
+      .populate({ path: 'author', select: 'username profilePicture bio' })
       .populate({ path: 'comments', populate: { path: 'author', select: 'username profilePicture' } })
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
-      message:"Posts Fetched Successfully!",
+      message:"Posts Fetched!",
       success: true,
       posts,
     });
@@ -90,7 +90,7 @@ export const GetUserPost = async (req, res) => {
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
-      message:"All User Posts Fetched Successfully!",
+      message:"All User Posts Fetched!",
       success: true,
       posts
     });
@@ -167,7 +167,7 @@ export const AddComment = async (req, res) => {
     const commentKrneWalaUserKiId = req.id;
     const { text } = req.body;
     if (!text) 
-    {
+    {  
       return res.status(400).json({
         message: 'Text is required',
         success: false
@@ -194,9 +194,9 @@ export const AddComment = async (req, res) => {
     await post.save();
 
     return res.status(201).json({
-      message: 'Comment added successfully',
+      message: 'Comment added!',
       success: true,
-      comment
+      comment 
     });
   } catch (error) {
     console.log(error);
@@ -211,7 +211,7 @@ export const GetCommentsOfPost = async (req, res) => {
   try {
     const postId = req.params.id;
     const comments = await Comment.find({ post: postId })
-    .populate('author', 'username profilePicture');
+    .populate({path:'author', select: "username profilePicture"});
 
     if (!comments || comments.length === 0) {
       return res.status(404).json({
@@ -221,6 +221,7 @@ export const GetCommentsOfPost = async (req, res) => {
     }
 
     return res.status(200).json({
+      message:"Comment Added!",
       success: true,
       comments
     });
