@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 dotenv.config();
-const app = express();
+import { app,server } from "./socket/socket.js";
 import UserRouter from "./routes/UserRoute.js";
 import PostRouter from "./routes/PostRoutes.js";
 import MessageRouter from "./routes/MessageRoutes.js";
@@ -50,6 +50,6 @@ app.use('/user',UserRouter);
 app.use("/user/post",PostRouter);
 app.use("/user/message",MessageRouter);
 const port = process.env.PORT || 4234;
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`app is listening on port http://localhost:${port}`);
-});
+}); 

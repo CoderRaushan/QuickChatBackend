@@ -1,6 +1,7 @@
 import Post from "../models/PostModel.js";
 import User from "../models/UserModel.js";
 import Comment from "../models/CommentModel.js";
+import { getReceiverSocketId, io} from "../socket/socket.js";
 //add new post
 export const AddNewPost = async (req, res) => {
   try {
@@ -118,7 +119,21 @@ export const LikePost = async (req, res) => {
     await post.updateOne({ $addToSet: { likes: likeKrneWalaUserKiId } });
     await post.save();
     // Implement socket.io for real-time notification (if needed)
-
+    const user=await User.findById(likeKrneWalaUserKiId).select("username profilePicture");
+    const OwnerId=post.author.toString();
+    const ReceiverSocketId=getReceiverSocketId(OwnerId);
+    if(OwnerId !== likeKrneWalaUserKiId)
+    {
+      const Notification={
+        type:"like",
+        userId:likeKrneWalaUserKiId,
+        userDetails:user,
+        postId,
+        message:"your post was liked!"
+      }
+      io.to(ReceiverSocketId).emit("notification",Notification);
+    }
+    
     return res.status(200).json({
       message: 'Post liked!',
       success: true
@@ -148,6 +163,21 @@ export const DisLikePost = async (req, res) => {
     await post.save();
     // Implement socket.io for real-time notification (if needed)
 
+    const user=await User.findById(likeKrneWalaUserKiId).select("username profilePicture");
+    const OwnerId=post.author.toString();
+    const ReceiverSocketId=getReceiverSocketId(OwnerId);
+    if(OwnerId !== likeKrneWalaUserKiId)
+    {
+      const Notification={
+        type:"dislike",
+        userId:likeKrneWalaUserKiId,
+        userDetails:user, 
+        postId,
+        message:"your post was dislike!"
+      }
+      io.to(ReceiverSocketId).emit("notification",Notification);
+    }
+   
     return res.status(200).json({
       message: 'Post disliked!',
       success: true
@@ -280,15 +310,13 @@ export const BookmarkPost = async (req, res) => {
   try {
     const postId = req.params.id;
     const authorId = req.id;
-
-    const post = await Post.findById(postId);
+    const post = await Post.findById(postId);  
     if (!post) {
       return res.status(404).json({
         message: 'Post not found',
         success: false
       });
     }
-
     const user = await User.findById(authorId);
     if (user.bookmarks.includes(post._id)) {
       // Already bookmarked - remove from the bookmark
@@ -303,7 +331,6 @@ export const BookmarkPost = async (req, res) => {
     await user.updateOne({$addToSet:{bookmarks:post._id}});
     await user.save();
     return res.status(200).json({
-      type: 'saved',
       message: 'Post bookmarked',
       success: true
     });

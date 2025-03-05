@@ -168,6 +168,7 @@ export const Login = async (req, res) => {
       bio: user.bio,
       followers: user.followers,
       following: user.following,
+      bookmarks:user.bookmarks,
       posts: populatedPosts,
     }
     return res.status(200).json({
@@ -225,13 +226,12 @@ export const GetProfile = async (req, res) => {
 };
 export const EditProfile = async (req, res) => {
   try {
-    const { username, age, bio, gender } = req.body;
+    const { bio, gender } = req.body;
     let profilePic;
     if (req.file) {
-      profilePic = req.file.path;
-      console.log(profilePic);
+      profilePic = req.file.path; 
     }
-    if (!username && !age && !bio && !gender && !profilePic) {
+    if ( !bio && !gender && !profilePic) {
       return res.status(400).json({
         message: "No fields to update provided",
         success: false,
@@ -240,14 +240,13 @@ export const EditProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.id,
       {
-        ...(username && { username }),
-        ...(age && { age }),
+        // ...(age && { age }),
         ...(bio && { bio }),
         ...(gender && { gender }),
         ...(profilePic && { profilePicture: profilePic }),
       },
-      { new: true, runValidators: true } // Return updated user and run validations
-    ).select("-password"); // Exclude sensitive fields like password
+      { new: true } 
+    ).select("-password");
     if (!updatedUser) {
       return res.status(404).json(
         {
@@ -257,7 +256,7 @@ export const EditProfile = async (req, res) => {
         });
     }
     return res.status(200).json({
-      message: "Profile updated successfully",
+      message: "Profile updated!",
       success: true,
       user: updatedUser,
     });
@@ -296,9 +295,9 @@ export const getSuggestedUsers = async (req, res) => {
 export const FollowAndUnfollow = async (req, res) => {
   try {
     const IdOfUserWhichFollowsTargetUser = req.id;
-    console.log("user 1", IdOfUserWhichFollowsTargetUser);
+    // console.log("user 1", IdOfUserWhichFollowsTargetUser);
     const IdOfTheTargetUser = req.params.id;
-    console.log("IdOfTheTargetUser ", IdOfTheTargetUser);
+    // console.log("IdOfTheTargetUser ", IdOfTheTargetUser);
     if (!IdOfUserWhichFollowsTargetUser || !IdOfTheTargetUser) {
       return res.status(400).json({
         message: 'user id not found!',
