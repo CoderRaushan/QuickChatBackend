@@ -7,7 +7,7 @@ const io = new Server(server, {
     cors: {
         origin: "http://localhost:5173",
     },
-    method: ["GET", "POST"],
+    methods: ["GET", "POST"],
 });
 
 const UserSocketMap = {};//isme each user ke crossponding user ka socket id aayega

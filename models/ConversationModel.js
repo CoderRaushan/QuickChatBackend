@@ -8,11 +8,11 @@ const conversationSchema = new mongoose.Schema({
       required: true,
     },
   ],
-  message: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Message',
-    required: true,
-  },
+  message: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message'
+    }],
 });
 
 const Conversation = mongoose.model('Conversation', conversationSchema);

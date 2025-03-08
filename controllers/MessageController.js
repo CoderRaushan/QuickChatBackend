@@ -1,40 +1,47 @@
+import { io } from '../socket/socket.js';
 import Conversation from '../models/ConversationModel.js';
 import Message from '../models/MessageModel.js';
+import { getReceiverSocketId } from '../socket/socket.js';
 //send message
 export const SendMessage = async (req, res) => {
-  try {
+  try {   
     const senderId = req.id;
     const receiverId = req.params.id;
-    const { message } = req.body;
-
+    const {text} = req.body;
+    if (!text) {
+      return res.status(400).json({ success: false, message: "Message content is required" });
+    }    
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] }
-    });
+    }).populate("message");
 
     // Establish the conversation if not started yet
     if (!conversation) {
       conversation = await Conversation.create({
-        participants: [senderId, receiverId]
+        participants: [senderId, receiverId],
       });
     }
 
     const newMessage = await Message.create({
       senderId,
       receiverId,
-      message
+      messages:text
     });
 
     if (newMessage) {
-      conversation.messages.push(newMessage._id);
-      await Promise.all([conversation.save(),newMessage.save()]);
+      conversation.message.push(newMessage._id);
+      await Promise.all([conversation.save(), newMessage.save()]);
     }
 
     // Implement socket.io for real-time data transfer (if needed)
-
+    const ReceiverSocketId = getReceiverSocketId(receiverId);
+    if (ReceiverSocketId) {
+      io.to(ReceiverSocketId).emit("newMessage", newMessage);
+    }
     return res.status(201).json({
       success: true,
       newMessage
-    });
+    });  
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -51,7 +58,7 @@ export const GetMessage = async (req, res) => {
 
     const conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] }
-    }).populate('messages');
+    }).populate('message');
 
     if (!conversation) {
       return res.status(404).json({
@@ -62,7 +69,7 @@ export const GetMessage = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      messages: conversation.messages
+      messages: conversation.message
     });
   } catch (error) {
     console.log(error);

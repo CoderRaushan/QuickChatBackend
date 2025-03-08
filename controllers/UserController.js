@@ -4,6 +4,7 @@ import VerificationCode from "../models/VerificationCodeModel.js"
 import { SendVarificationCode } from "../middlewares/VarifyEmail.js";
 import jwtTokenFunction from "../Jwt/JwtToken.js";
 import Post from "../models/PostModel.js";
+import { getReceiverSocketId, io } from "../socket/socket.js";
 
 export const SendVarificationCodeToUserEmail = async (req, res) => {
   try {
@@ -137,7 +138,15 @@ export const Login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: "All fields are required!", success: false });
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email })
+      .populate({
+        path: "following",
+        select: "_id name username profilePicture"
+      })
+      .populate({
+        path: "followers",
+        select: "_id name username profilePicture"
+      });
     //!(await bcrypt.compare(password, user.password)
     if (!user) {
       return res.status(400).json({ error: "Invalid user credential!", success: false });
@@ -168,7 +177,7 @@ export const Login = async (req, res) => {
       bio: user.bio,
       followers: user.followers,
       following: user.following,
-      bookmarks:user.bookmarks,
+      bookmarks: user.bookmarks,
       posts: populatedPosts,
     }
     return res.status(200).json({
@@ -205,14 +214,25 @@ export const GetProfile = async (req, res) => {
     const userId = req.params.id;
 
     const user = await User.findById(userId)
-      .populate({ path: "posts", options: { sort: { createdAt: -1 } }, populate: [
-        { path: "author", select: "username profilePicture"},
-        { path: "comments",
-          populate: { path: "author", select: "username profilePicture" } 
-        }
-      ]})
+      .populate({
+        path: "posts", options: { sort: { createdAt: -1 } }, populate: [
+          { path: "author", select: "username profilePicture" },
+          {
+            path: "comments",
+            populate: { path: "author", select: "username profilePicture" }
+          }
+        ]
+      })
       .populate({ path: "bookmarks", options: { sort: { createdAt: -1 } } })
-      .select("-password"); 
+      .select("-password")
+      .populate({
+        path: "following",
+        // select: "_id name username profilePicture"
+      })
+      .populate({
+        path: "followers",
+        // select: "_id name username profilePicture"
+      });
     if (!user) {
       return res.status(404).json({ message: "User not found!", success: false });
     }
@@ -229,9 +249,9 @@ export const EditProfile = async (req, res) => {
     const { bio, gender } = req.body;
     let profilePic;
     if (req.file) {
-      profilePic = req.file.path; 
+      profilePic = req.file.path;
     }
-    if ( !bio && !gender && !profilePic) {
+    if (!bio && !gender && !profilePic) {
       return res.status(400).json({
         message: "No fields to update provided",
         success: false,
@@ -245,7 +265,7 @@ export const EditProfile = async (req, res) => {
         ...(gender && { gender }),
         ...(profilePic && { profilePicture: profilePic }),
       },
-      { new: true } 
+      { new: true }
     ).select("-password");
     if (!updatedUser) {
       return res.status(404).json(
@@ -295,61 +315,108 @@ export const getSuggestedUsers = async (req, res) => {
 export const FollowAndUnfollow = async (req, res) => {
   try {
     const IdOfUserWhichFollowsTargetUser = req.id;
-    // console.log("user 1", IdOfUserWhichFollowsTargetUser);
     const IdOfTheTargetUser = req.params.id;
-    // console.log("IdOfTheTargetUser ", IdOfTheTargetUser);
+
     if (!IdOfUserWhichFollowsTargetUser || !IdOfTheTargetUser) {
       return res.status(400).json({
-        message: 'user id not found!',
+        message: "User ID not found!",
         success: false
       });
     }
+
     if (IdOfUserWhichFollowsTargetUser === IdOfTheTargetUser) {
       return res.status(400).json({
-        message: 'You Can not Follow or Unfollow Yourself!',
+        message: "You cannot follow or unfollow yourself!",
         success: false
       });
     }
+
+    // Find both users
     const [UserWhichFollowsTargetUser, TargetUser] = await Promise.all([
       User.findById(IdOfUserWhichFollowsTargetUser),
       User.findById(IdOfTheTargetUser),
     ]);
-    //  Find both users
+
     if (!UserWhichFollowsTargetUser || !TargetUser) {
       return res.status(404).json({
-        message: 'User not found!',
+        message: "User not found!",
         success: false,
       });
     }
-    //follow karna hai ya unfollow
-    const Isfollowed = UserWhichFollowsTargetUser.following.includes(IdOfTheTargetUser);
-    if (Isfollowed) {
-      //unfollow logic
+
+    // Check if the user is already followed
+    const IsFollowed = UserWhichFollowsTargetUser.following.includes(IdOfTheTargetUser);
+
+    if (IsFollowed) {
+      // **Unfollow logic**
       await Promise.all([
         User.updateOne({ _id: IdOfUserWhichFollowsTargetUser }, { $pull: { following: IdOfTheTargetUser } }),
         User.updateOne({ _id: IdOfTheTargetUser }, { $pull: { followers: IdOfUserWhichFollowsTargetUser } }),
-      ])
+      ]);
+
+      // Send socket notification
+      const user = await User.findById(IdOfUserWhichFollowsTargetUser);
+      const authorUser = await User.findById(IdOfTheTargetUser)
+        .populate([
+          { path: "following", select: "_id name username profilePicture" },
+          { path: "followers", select: "_id name username profilePicture" }
+        ]);
+      const OwnerId = IdOfTheTargetUser.toString();
+      const ReceiverSocketId = getReceiverSocketId(OwnerId);
+
+      if (OwnerId !== IdOfUserWhichFollowsTargetUser) {
+        const Notification = {
+          type: "unfollow",
+          userId: IdOfUserWhichFollowsTargetUser,
+          userDetails: user,
+          author: authorUser,
+          message: "You are unfollowed!"
+        };
+        io.to(ReceiverSocketId).emit("unfollow", Notification);
+      }
+
       return res.status(200).json({
-        message: 'Unfollowed Successfully!',
+        message: "Unfollowed Successfully!",
         success: true
       });
-    }
-    else {
-      //unfollow logic
+    } else {
+      // **Follow logic**
       await Promise.all([
         User.updateOne({ _id: IdOfUserWhichFollowsTargetUser }, { $push: { following: IdOfTheTargetUser } }),
         User.updateOne({ _id: IdOfTheTargetUser }, { $push: { followers: IdOfUserWhichFollowsTargetUser } })
       ]);
+
+      // Send socket notification
+      const user = await User.findById(IdOfUserWhichFollowsTargetUser);
+      const authorUser = await User.findById(IdOfTheTargetUser)
+        .populate([
+          { path: "following", select: "_id name username profilePicture" },
+          { path: "followers", select: "_id name username profilePicture" }
+        ]);
+      const OwnerId = IdOfTheTargetUser.toString();
+      const ReceiverSocketId = getReceiverSocketId(OwnerId);
+
+      if (OwnerId !== IdOfUserWhichFollowsTargetUser) {
+        const Notification = {
+          type: "follow", // ✅ Correct event name
+          userId: IdOfUserWhichFollowsTargetUser,
+          userDetails: user,
+          author: authorUser,
+          message: "You are followed!"
+        };
+        io.to(ReceiverSocketId).emit("follow", Notification);
+      }
+
       return res.status(200).json({
-        message: 'followed Successfully!',
+        message: "Followed Successfully!",
         success: true
       });
     }
   } catch (error) {
-    console.error('Error in FollowAndUnfollowLogin:', error);
+    console.error("Error in FollowAndUnfollowLogic:", error);
     return res.status(500).json({
-      message: 'Internal Server Error',
+      message: "Internal Server Error",
       success: false
     });
   }
-}
+};

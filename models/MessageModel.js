@@ -16,6 +16,8 @@ const messageSchema = new mongoose.Schema({
     required: true,
     default: "Message",
   },
+  read: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
 });
 
 const Message = mongoose.model('Message', messageSchema);

@@ -163,7 +163,7 @@ export const DisLikePost = async (req, res) => {
     await post.save();
     // Implement socket.io for real-time notification (if needed)
 
-    const user=await User.findById(likeKrneWalaUserKiId).select("username profilePicture");
+    const user=await User.findById(likeKrneWalaUserKiId).select("_id username profilePicture");
     const OwnerId=post.author.toString();
     const ReceiverSocketId=getReceiverSocketId(OwnerId);
     if(OwnerId !== likeKrneWalaUserKiId)
