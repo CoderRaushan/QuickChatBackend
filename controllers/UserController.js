@@ -1,4 +1,5 @@
 import { WelComeMessage } from "../middlewares/WelComeEmail.js";
+import bcrypt from "bcrypt";
 import User from "../models/UserModel.js";
 import VerificationCode from "../models/VerificationCodeModel.js"
 import { SendVarificationCode } from "../middlewares/VarifyEmail.js";
@@ -38,8 +39,68 @@ export const SendVarificationCodeToUserEmail = async (req, res) => {
   }
 };
 
+// export const ManualRegister = async (req, res) => {
+//   try {
+//     const { username, email, Varcode, age, password, name } = req.body;
+
+//     if (!username || !email || !password || !Varcode || !age || !name) {
+//       return res.status(401).json({ message: "Please fill all fields", success: false });
+//     }
+
+//     // Fetch verification code for the email
+//     const VarCodeEntry = await VerificationCode.findOne({ email });
+//     if (!VarCodeEntry) {
+//       return res.status(404).json({ message: "Verification code not found or expired!", success: false });
+//     }
+
+//     if (VarCodeEntry.VerfiCode !== Varcode) {
+//       return res.status(400).json({ message: "Invalid verification code!", success: false });
+//     }
+
+//     // Check if user already exists
+//     const UserExist = await User.findOne({ email });
+//     if (UserExist) {
+//       return res.status(400).json({
+//         message: UserExist.IsVerified ? "User already registered and verified!" : "User already exists but is not verified!",
+//         success: false,
+//       });
+//     }
+
+//     // Hash password before saving
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     // Register the user
+//     const newUser = new User({
+//       username,
+//       name,
+//       email,
+//       password: hashedPassword,
+//       age,
+//       IsVerified: true,
+//     });
+//     // console.log(newUser);
+//     const savedUser = await newUser.save();
+//     console.log("savedUser",savedUser);
+//     // Send welcome email
+//     try {
+//       await WelComeMessage(email, username);
+//     } catch (emailError) {
+//       console.error("Email sending failed:", emailError);
+//     }
+//     // Remove verification code entry
+//     await VerificationCode.deleteOne({ email });
+
+//     res.status(201).json({ message: "User registered successfully!", success: true, user: savedUser });
+
+//   } catch (err) {
+//     res.status(500).json({ message: "Internal server error!", success: false, error: err.message || err });
+//   }
+// };
+
+
 export const ManualRegister = async (req, res) => {
   try {
+
     const { username, email, Varcode, age, password, name } = req.body;
     // Check for missing fields
     if (!username || !email || !password || !Varcode || !age || !name) {
@@ -48,10 +109,8 @@ export const ManualRegister = async (req, res) => {
         success: false,
       });
     }
-    //  console.log(VarificationCode);
     // Fetch verification code for the email
     const VarCodeEntry = await VerificationCode.findOne({ email });
-
     // Check if verification code exists
     if (!VarCodeEntry) {
       return res.status(404).json({
@@ -61,7 +120,7 @@ export const ManualRegister = async (req, res) => {
     }
 
     // Verify the provided code
-    if (VarCodeEntry.VerfiCode != Varcode) {
+    if (VarCodeEntry.VerfiCode !== Varcode) {
       return res.status(400).json({
         message: "Invalid verification code!",
         success: false,
@@ -84,29 +143,33 @@ export const ManualRegister = async (req, res) => {
     }
 
     // Register the user
-    const newUser = new User({
+    const newUsers = new User({
       username,
       name,
       email,
       password,
       age,
       IsVerified: true,
+      // providers: [],
     });
-
-    const savedUser = await newUser.save();
-
+    const savedUser = await newUsers.save();
+    console.log("savedUser", savedUser);
     // Send a welcome email
-    await WelComeMessage(email, username);
-
+    try {
+      await WelComeMessage(email, username);
+    } catch (error) {
+      console.error("Email sending failed:", error);
+    }
     // Remove the verification code entry after successful registration
     await VerificationCode.deleteOne({ email });
-
+    console.log("savedUser", savedUser);
     res.status(201).json({
       message: "User registered successfully!",
       success: true,
       user: savedUser,
     });
   } catch (err) {
+    console.error("Error in ManualRegister:", err);
     res.status(500).json({
       message: "Internal server error!",
       success: false,

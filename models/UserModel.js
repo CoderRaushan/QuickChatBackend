@@ -6,9 +6,9 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    name:{
+    name: {
       type: String,
-      // required: true,
+      required: true,
     },
     email: {
       type: String,
@@ -20,7 +20,7 @@ const UserSchema = new mongoose.Schema(
     },
     age: {
       type: Number,
-    }, 
+    },
     IsVerified: {
       type: Boolean,
       default: false,
@@ -43,11 +43,9 @@ const UserSchema = new mongoose.Schema(
       {
         providerName: {
           type: String,
-          required: true,
         },
         providerId: {
           type: String,
-          required: true,         
         },
       },
     ],
@@ -62,7 +60,6 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Add a compound unique index on providerName and providerId (this will prevent duplicates of providerId for the same provider)
 UserSchema.index({ "providers.providerName": 1, "providers.providerId": 1 }, { unique: true });
 
 const User = mongoose.model("User", UserSchema);
