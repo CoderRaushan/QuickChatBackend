@@ -150,7 +150,6 @@ export const ManualRegister = async (req, res) => {
       password,
       age,
       IsVerified: true,
-      // providers: [],
     });
     const savedUser = await newUsers.save();
     console.log("savedUser", savedUser);

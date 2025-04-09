@@ -16,7 +16,11 @@ const messageSchema = new mongoose.Schema({
     required: true,
     default: "Message",
   },
-  read: { type: Boolean, default: false },
+  status: {
+    type: String,
+    enum: ["sent", "delivered", "seen"],
+    default: "sent",
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
