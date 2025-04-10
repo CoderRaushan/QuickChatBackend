@@ -1,89 +1,3 @@
-// import { Server } from "socket.io";
-// import express from "express";
-// import http from "http";
-// const app = express();
-// const server = http.createServer(app);
-// const io = new Server(server, {
-//     cors: {
-//         origin: "http://localhost:5173",
-//     },
-//     methods: ["GET", "POST"],
-// });
-
-// const UserSocketMap = {};//isme each user ke crossponding user ka socket id aayega
-// export const getReceiverSocketId=(receiverId)=>{
-// return UserSocketMap[receiverId];
-// }
-// io.on("connection",(socket)=>
-// {
-//     const userId=socket.handshake.query.userId;
-//     if(userId)
-//     {
-//         UserSocketMap[userId]=socket.id;
-//         console.log("user connected successfully!",userId,socket.id);
-//     }
-//     io.emit("OnlineUsers",Object.keys(UserSocketMap));
-//     socket.on("disconnect",()=>{
-//         console.log("user disconnected!",userId);
-//         delete UserSocketMap[userId];
-//         io.emit("OnlineUsers",Object.keys(UserSocketMap));
-//     });
-// });
-
-// export {io,app,server};
-
-
-// import { Server } from "socket.io";
-// import express from "express";
-// import http from "http";
-// import Message from "../models/MessageModel.js"; 
-// const app = express();
-// const server = http.createServer(app);
-// const io = new Server(server, {
-//     cors: {
-//         origin: "http://localhost:5173",
-//     },
-//     methods: ["GET", "POST"],
-// });
-
-// const UserSocketMap = {}; // userId -> socketId
-// export const getReceiverSocketId = (receiverId) => {
-//     return UserSocketMap[receiverId];
-// };
-
-// io.on("connection", (socket) => {
-//     const userId = socket.handshake.query.userId;
-
-//     if (userId) {
-//         UserSocketMap[userId] = socket.id;
-//         console.log("User connected:", userId, socket.id);
-//     }
-
-//     io.emit("OnlineUsers", Object.keys(UserSocketMap));
-
-//     // Message received => update to "delivered"
-//     socket.on("message-delivered", async (messageId) => {
-//         await Message.findByIdAndUpdate(messageId, { status: "delivered" });
-//         const msg = await Message.findById(messageId);
-//         socket.to(UserSocketMap[msg.senderId.toString()]).emit("message-status-updated", msg);
-//     });
-
-//     // Message seen => update to "seen"
-//     socket.on("message-seen", async (messageId) => {
-//         await Message.findByIdAndUpdate(messageId, { status: "seen" });
-//         const msg = await Message.findById(messageId);
-//         socket.to(UserSocketMap[msg.senderId.toString()]).emit("message-status-updated", msg);
-//     });
-
-//     socket.on("disconnect", () => {
-//         console.log("User disconnected:", userId);
-//         delete UserSocketMap[userId];
-//         io.emit("OnlineUsers", Object.keys(UserSocketMap));
-//     });
-// });
-
-// export { io, app, server };
-
 import { Server } from "socket.io";
 import express from "express";
 import http from "http";
@@ -93,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
