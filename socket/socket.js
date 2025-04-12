@@ -7,9 +7,11 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
+    credentials: true
   },
+  transports: ["websocket"], 
 });
 
 const UserSocketMap = {};
@@ -27,20 +29,7 @@ io.on("connection", (socket) => {
   }
 
   io.emit("OnlineUsers", Object.keys(UserSocketMap));
-
-  socket.on("message-delivered", async (messageId) => {
-    try {
-      await Message.findByIdAndUpdate(messageId, { status: "delivered" });
-      const msg = await Message.findById(messageId);
-      const senderSocket = UserSocketMap[msg.senderId?.toString()];
-      if (senderSocket) {
-        io.to(senderSocket).emit("message-status-updated", msg);
-      }
-    } catch (err) {
-      console.error("message-delivered error:", err.message);
-    }
-  });
-
+  
   socket.on("message-seen", async (messageId) => {
     try {
       await Message.findByIdAndUpdate(messageId, { status: "seen" });
