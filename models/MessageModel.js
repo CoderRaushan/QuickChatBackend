@@ -13,17 +13,23 @@ const messageSchema = new mongoose.Schema({
   },
   messages: {
     type: String,
-    required: true,
-    default: "Message",
+  },
+  file: {
+    url: String,        // Cloudinary or local path
+    filename: String,   // Original filename
+    size: Number,       // In bytes
+    mimetype: String    // Useful for detecting type (image/pdf/video etc.)
   },
   status: {
     type: String,
     enum: ["sent", "delivered", "seen"],
     default: "sent",
   },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Message = mongoose.model('Message', messageSchema);
-
 export default Message;

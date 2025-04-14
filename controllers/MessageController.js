@@ -4,13 +4,13 @@ import Message from '../models/MessageModel.js';
 import { getReceiverSocketId } from '../socket/socket.js';
 //send message
 export const SendMessage = async (req, res) => {
-  try {   
+  try {
     const senderId = req.id;
     const receiverId = req.params.id;
-    const {text} = req.body;
+    const { text } = req.body;
     if (!text) {
       return res.status(400).json({ success: false, message: "Message content is required" });
-    }    
+    }
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] }
     }).populate("message");
@@ -24,7 +24,7 @@ export const SendMessage = async (req, res) => {
     const newMessage = await Message.create({
       senderId,
       receiverId,
-      messages:text
+      messages: text
     });
 
     if (newMessage) {
@@ -40,7 +40,7 @@ export const SendMessage = async (req, res) => {
     return res.status(201).json({
       success: true,
       newMessage
-    });  
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -49,6 +49,75 @@ export const SendMessage = async (req, res) => {
     });
   }
 };
+
+export const SendFile = async (req, res) => {
+  try {
+    const senderId = req.id;
+    const receiverId = req.params.id;
+    const { text } = req.body;
+
+    if (!text && !req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Either text or file is required!"
+      });
+    }
+
+    // Find existing conversation or create new one
+    let conversation = await Conversation.findOne({
+      participants: { $all: [senderId, receiverId] }
+    }).populate("message");
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        participants: [senderId, receiverId],
+      });
+    }
+
+    // Prepare file metadata (if file exists)
+    let fileData = null;
+    if (req.file) {
+      const { path, originalname, size, mimetype } = req.file;
+      fileData = {
+        url: path,          
+        filename: originalname,
+        size: size,
+        mimetype: mimetype
+      };
+    }
+
+    // Create new message
+    const newMessage = await Message.create({
+      senderId,
+      receiverId,
+      messages: text,
+      file: fileData
+    });
+
+    if (newMessage) {
+      conversation.message.push(newMessage._id);
+      await Promise.all([conversation.save(), newMessage.save()]);
+    }
+
+    // Emit message via socket.io (if receiver is connected)
+    const ReceiverSocketId = getReceiverSocketId(receiverId);
+    if (ReceiverSocketId) {
+      io.to(ReceiverSocketId).emit("newMessage", newMessage);
+    }
+
+    return res.status(201).json({
+      success: true,
+      newMessage
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error!"
+    });
+  }
+};
+
 //get message b/w sender and receiver
 export const GetMessage = async (req, res) => {
   try {
