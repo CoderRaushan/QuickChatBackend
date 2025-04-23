@@ -2,7 +2,8 @@ import { io } from '../socket/socket.js';
 import Conversation from '../models/ConversationModel.js';
 import Message from '../models/MessageModel.js';
 import { getReceiverSocketId } from '../socket/socket.js';
-//send message
+import { getPresignedUrl } from "../utils/getPresignedUrl.js"
+//send message 
 export const SendMessage = async (req, res) => {
   try {
     const senderId = req.id;
@@ -54,9 +55,9 @@ export const SendFile = async (req, res) => {
   try {
     const senderId = req.id;
     const receiverId = req.params.id;
-    const { text } = req.body;
+    const { text, fileData, fileType, fileName,fileSize } = req.body;
 
-    if (!text && !req.file) {
+    if (!text && !fileData) {
       return res.status(400).json({
         success: false,
         message: "Either text or file is required!"
@@ -74,24 +75,18 @@ export const SendFile = async (req, res) => {
       });
     }
 
-    // Prepare file metadata (if file exists)
-    let fileData = null;
-    if (req.file) {
-      const { path, originalname, size, mimetype } = req.file;
-      fileData = {
-        url: path,          
-        filename: originalname,
-        size: size,
-        mimetype: mimetype
+     const newfileData = {
+        url: fileData,
+        filename: fileName,
+        size: fileSize,
+        mimetype: fileType,
       };
-    }
-
     // Create new message
     const newMessage = await Message.create({
       senderId,
       receiverId,
       messages: text,
-      file: fileData
+      file: newfileData
     });
 
     if (newMessage) {
@@ -147,3 +142,24 @@ export const GetMessage = async (req, res) => {
     });
   }
 };
+export const GetUploadURL = async (req, res) => {
+  try {
+    console.log("i reached here");
+    const { fileType, originalName } = req.body;
+    const { uploadUrl, fileUrl } = await getPresignedUrl(fileType, originalName);
+    console.log(uploadUrl,fileUrl);
+    return res.status(200).json({
+      success: true,
+      messages: "File Upload Signed Url success!",
+      uploadUrl,
+      fileUrl
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error generating pre-signed URL",
+    });
+  }
+
+}
