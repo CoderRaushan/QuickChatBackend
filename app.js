@@ -33,7 +33,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(urlencoded({extended:true}));
 const corsOptions={
-    origin:["http://localhost:5173"],
+    origin:["http://localhost:5173","https://quickchatbackend-etjb.onrender.com"],
     credentials:true,
 }
 
