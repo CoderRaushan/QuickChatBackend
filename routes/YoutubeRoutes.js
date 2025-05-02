@@ -12,6 +12,7 @@ router.get(
   })
 );
 
+gi
 // YouTube Callback Route
 router.get(
   '/auth/youtube/callback',
