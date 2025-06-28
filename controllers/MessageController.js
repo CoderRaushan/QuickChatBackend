@@ -143,10 +143,8 @@ export const GetMessage = async (req, res) => {
 };
 export const GetUploadURL = async (req, res) => {
   try {
-    console.log("i reached here");
     const { fileType, originalName } = req.body;
     const { uploadUrl, fileUrl } = await getPresignedUrl(fileType, originalName);
-    console.log(uploadUrl,fileUrl);
     return res.status(200).json({
       success: true,
       messages: "File Upload Signed Url success!",

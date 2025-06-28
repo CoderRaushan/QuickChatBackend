@@ -5,16 +5,11 @@ import { getReceiverSocketId, io} from "../socket/socket.js";
 //add new post
 export const AddNewPost = async (req, res) => {
   try {
-    const { caption } = req.body;
+    const { caption,fileUrl } = req.body;
+    console.log(caption,fileUrl);
     const author = req.id;
-    if (!req.file) {
-      return res.status(400).json({
-        message: "Image is required",
-        success: false,
-      });
-    }
-    
-    const PostPicture = req.file.path;
+    const PostPicture=fileUrl;
+    console.log(PostPicture);
     if (!caption || !PostPicture || !author) {
       return res.status(400).json({
         message: "Please fill in all fields",

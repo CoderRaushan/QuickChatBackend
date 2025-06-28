@@ -10,7 +10,8 @@ import
 from '../controllers/PostController.js';
 
 const router = express.Router();
-router.route('/add').post(isAuthenticated,upload.single('image'), AddNewPost);
+// router.route('/add').post(isAuthenticated,upload.single('image'), AddNewPost);
+router.route('/add').post(isAuthenticated, AddNewPost);
 router.route('/all').get(isAuthenticated, GetAllPosts);
 router.route('/userpost/all').get(isAuthenticated, GetUserPost);    
 router.route('/:id/like').get(isAuthenticated, LikePost);
