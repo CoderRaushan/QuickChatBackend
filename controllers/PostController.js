@@ -5,12 +5,10 @@ import { getReceiverSocketId, io} from "../socket/socket.js";
 //add new post
 export const AddNewPost = async (req, res) => {
   try {
-    const { caption,fileUrl } = req.body;
-    console.log(caption,fileUrl);
+    const { caption,fileUrl,mimetype,filename,size } = req.body;
     const author = req.id;
     const PostPicture=fileUrl;
-    console.log(PostPicture);
-    if (!caption || !PostPicture || !author) {
+    if (!caption || !PostPicture || !author || !mimetype|| !filename || !size) {
       return res.status(400).json({
         message: "Please fill in all fields",
         success: false, 
@@ -20,7 +18,7 @@ export const AddNewPost = async (req, res) => {
     // Create the post
     const post = await Post.create({
       caption,
-      image: PostPicture,
+      file:{url:fileUrl,filename,size,mimetype},
       author,
     });
 
@@ -62,7 +60,6 @@ export const GetAllPosts = async (req, res) => {
       .populate({ path: 'author', select: 'username profilePicture bio' })
       .populate({ path: 'comments', populate: { path: 'author', select: 'username profilePicture' } })
       .sort({ createdAt: -1 });
-
     return res.status(200).json({
       message:"Posts Fetched!",
       success: true,

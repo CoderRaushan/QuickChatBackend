@@ -3,7 +3,12 @@ import Comment from "../models/CommentModel.js";
 import User from "./UserModel.js";
 const postSchema = new mongoose.Schema({
   caption: { type: String, default: "" },
-  image: { type: String, required: true },
+  file: {
+    url: String,        
+    filename: String,  
+    size: Number,       
+    mimetype: String 
+  },
   author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
@@ -11,4 +16,3 @@ const postSchema = new mongoose.Schema({
 
 const Post = mongoose.model("Post", postSchema);
 export default Post;
- 
