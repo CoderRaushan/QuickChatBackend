@@ -11,7 +11,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
     credentials: true
   },
-  transports: ["websocket"], 
+  transports: ["websocket"],
 });
 
 const UserSocketMap = {};
@@ -29,7 +29,7 @@ io.on("connection", (socket) => {
   }
 
   io.emit("OnlineUsers", Object.keys(UserSocketMap));
-  
+
   socket.on("message-seen", async (messageId) => {
     try {
       await Message.findByIdAndUpdate(messageId, { status: "seen" });
@@ -42,40 +42,43 @@ io.on("connection", (socket) => {
       console.error("message-seen error:", err.message);
     }
   });
-  socket.on("send-message", async ({ receiverId, text, tempId }) => {
+  socket.on("send-message", async ({ conversationId, receiverId, text, tempId, fileUrl, fileType, fileName, fileSize }) => {
     try {
-      const senderId = userId; // ✅ Use this instead of `req.id`
-  
-      let conversation = await Conversation.findOne({
-        participants: { $all: [senderId, receiverId] },
-      }).populate("message");;
-  
+      const senderId = userId;
+      // let conversation = await Conversation.findOne({
+      //   participants: { $all: [senderId, receiverId] },
+      // });
+
       // If no conversation exists, create one
-      if (!conversation) {
-        conversation = await Conversation.create({
-          participants: [senderId, receiverId],
-          message: [],
-        });
+      if (!conversationId || !receiverId || !tempId) {
+        return res.status(400).json({ success: false, message: "conversationId,receiverId,tempId is required" });
       }
-  
+      // const newMessage = await Message.create({
+      //   conversationId: conversation._id,
+      //   senderId,
+      //   receiverId,
+      //   messages: text,
+      // });
+
+      const fileObj = {
+        url: fileUrl,
+        filename: fileName,
+        size: fileSize,
+        mimetype: fileType,
+      };
+
       const newMessage = await Message.create({
+        conversationId,
         senderId,
         receiverId,
         messages: text,
+        file: fileObj,
       });
-  
-      // Initialize message array if it doesn't exist (safety)
-      if (!conversation.message) conversation.message = [];
-  
-      conversation.message.push(newMessage._id);
-      await conversation.save();
-  
+
       const ReceiverSocketId = getReceiverSocketId(receiverId);
       if (ReceiverSocketId) {
         io.to(ReceiverSocketId).emit("newMessage", newMessage);
       }
-  
-      // Confirm message back to sender with the tempId so they can replace it
       io.to(socket.id).emit("message-confirmed", {
         ...newMessage.toObject(),
         tempId,
@@ -84,22 +87,21 @@ io.on("connection", (socket) => {
       console.error("Error sending message via socket:", error);
     }
   });
-
   socket.on("typing", ({ to, from, username }) => {
     const receiverSocketId = UserSocketMap[to];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("typing", { from, username });
     }
   });
-  
+
   socket.on("stop-typing", ({ to }) => {
     const receiverSocketId = UserSocketMap[to];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("stop-typing", { from: userId });
     }
   });
-  
-  
+
+
   socket.on("disconnect", () => {
     console.log("User disconnected:", userId);
     delete UserSocketMap[userId];

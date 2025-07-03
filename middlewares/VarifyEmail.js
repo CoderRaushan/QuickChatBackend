@@ -12,7 +12,7 @@ export const SendVarificationCode = async (email, varificationCode) => {
         varificationCode
       ),
     });
-    console.log("Email send successfully!", response);
+    // console.log("Email send successfully!", response);
   } catch (error) {
     console.log("Email send error!");
   }

@@ -12,7 +12,7 @@ export const WelComeMessage = async (email,name) => {
         name
       ),
     });
-    console.log("Welcome Email successfully!", response);
+    // console.log("Welcome Email successfully!", response);
   } catch (error) {
     console.log("Welcome Email send error!");
   }

@@ -152,7 +152,7 @@ export const ManualRegister = async (req, res) => {
       IsVerified: true,
     });
     const savedUser = await newUsers.save();
-    console.log("savedUser", savedUser);
+    // console.log("savedUser", savedUser);
     // Send a welcome email
     try {
       await WelComeMessage(email, username);
@@ -161,7 +161,7 @@ export const ManualRegister = async (req, res) => {
     }
     // Remove the verification code entry after successful registration
     await VerificationCode.deleteOne({ email });
-    console.log("savedUser", savedUser);
+    // console.log("savedUser", savedUser);
     res.status(201).json({
       message: "User registered successfully!",
       success: true,
