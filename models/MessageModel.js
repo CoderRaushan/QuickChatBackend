@@ -66,6 +66,9 @@ const messageSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+// ✅ Compound index for better performance on scroll/pagination
+messageSchema.index({ conversationId: 1, createdAt: -1 });
+
 const Message = mongoose.model('Message', messageSchema);
 export default Message;
 

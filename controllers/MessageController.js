@@ -246,56 +246,59 @@ import { getPresignedUrl } from "../utils/getPresignedUrl.js"
 //     });
 //   }
 // };
-export const GetMessage = async (req, res) => {
-  try {
-    // const senderId = req.id;
-    const conversationId = req.params.id;
-    // const conversation = await Conversation.findOne({
-    //   participants: { $all: [senderId, receiverId] }
-    // });
-
-    if (!conversationId) {
-      return res.status(404).json({
-        success: false,
-        message: 'No conversation found'
-      });
-    }
-
-    const messages = await Message.find({ conversationId })
-      .sort({ createdAt: 1 });
-    return res.status(200).json({
-      success: true,
-      messages
-    });
-
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error!'
-    });
-  }
-};
-
 // export const GetMessage = async (req, res) => {
 //   try {
-//     const { conversationId } = req.params;
-//     const { limit = 20, skip = 0 } = req.query;
+//     // const senderId = req.id;
+//     const conversationId = req.params.id;
+//     // const conversation = await Conversation.findOne({
+//     //   participants: { $all: [senderId, receiverId] }
+//     // });
+
+//     if (!conversationId) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'No conversation found'
+//       });
+//     }
 
 //     const messages = await Message.find({ conversationId })
-//       .sort({ createdAt: -1 }) // newest first
-//       .skip(Number(skip))
-//       .limit(Number(limit));
-
+//       .sort({ createdAt: 1 });
 //     return res.status(200).json({
 //       success: true,
-//       messages,
+//       messages
 //     });
+
 //   } catch (error) {
 //     console.log(error);
-//     return res.status(500).json({ message: "Internal server error", success: false });
+//     return res.status(500).json({
+//       success: false,
+//       message: 'Internal server error!'
+//     });
 //   }
 // };
+
+export const GetMessage = async (req, res) => {
+  try {
+    console.log("reached here ")
+    const { conversationId } = req.params;
+    console.log("convers",conversationId);
+    const { limit = 5, skip = 0 } = req.query;
+    console.log("limit,skip",limit,skip)
+
+    const messages = await Message.find({ conversationId })
+      .sort({ createdAt: -1 }) // newest first
+      .skip(Number(skip))
+      .limit(Number(limit));
+    console.log("messages");
+    return res.status(200).json({
+      success: true,
+      messages,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error", success: false });
+  }
+};
 
 export const startConversation = async (req, res) => {
   try {
