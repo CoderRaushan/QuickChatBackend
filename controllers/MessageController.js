@@ -3,6 +3,7 @@ import Conversation from '../models/ConversationModel.js';
 import Message from '../models/MessageModel.js';
 import { getReceiverSocketId } from '../socket/socket.js';
 import { getPresignedUrl } from "../utils/getPresignedUrl.js"
+import mongoose from "mongoose";
 //send message 
 // export const SendMessage = async (req, res) => {
 //   try {
@@ -277,61 +278,61 @@ import { getPresignedUrl } from "../utils/getPresignedUrl.js"
 //   }
 // };
 
-// export const GetMessage = async (req, res) => {
-//   try {
-//     const { conversationId } = req.params;
-//     const { limit = 5, skip = 0 } = req.query;
-//     const messages = await Message.find({ conversationId })
-//       .sort({ createdAt: -1 }) // newest first
-//       .skip(Number(skip))
-//       .limit(Number(limit));
-//     return res.status(200).json({
-//       success: true,
-//       messages,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({ message: "Internal server error", success: false });
-//   }
-// };
-export const GetMessage = async (req, res, next) => {
+export const GetMessage = async (req, res) => {
   try {
     const { conversationId } = req.params;
-    const {
-      limit: rawLimit = 20,
-      before,               // key‑set cursor (createdAt or _id)
-    } = req.query;
-
-    /* ---------- 1.  Basic validation / sanitation ---------- */
-    if (!mongoose.isValidObjectId(conversationId)) {
-      return res.status(400).json({ success: false, message: "Invalid conversationId" });
-    }
-    const limit = Math.min(parseInt(rawLimit, 10) || 20, 100);  // hard cap
-
-    /* ---------- 2.  Build a key‑set (no‑skip) filter ---------- */
-    const filter = { conversationId };
-    if (before) {
-      // Accept either a timestamp or an ObjectId; ObjectId is monotonic
-      filter.$or = [
-        { createdAt: { $lt: new Date(before) } },
-        { _id: { $lt: before } },
-      ];
-    }
-
-    /* ---------- 3.  Run the lean query ---------- */
-    const messages = await Message.find(filter)
-      .sort({ createdAt: -1, _id: -1 })   // compound sort matches index
-      .limit(limit)
-      .select("-__v")                     // projection: drop noise
-      .lean()                             // plain JS objects → ~30‑40 % faster
-      .exec();
-
-    res.json({ success: true, count: messages.length, messages });
-  } catch (err) {
-    /* Pass to a global error handler so you don't silently swallow stack traces */
-    next(err);
+    const { limit = 5, skip = 0 } = req.query;
+    const messages = await Message.find({ conversationId })
+      .sort({ createdAt: -1 }) // newest first
+      .skip(Number(skip))
+      .limit(Number(limit));
+    return res.status(200).json({
+      success: true,
+      messages,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error", success: false });
   }
 };
+// export const GetMessage = async (req, res, next) => {
+//   try {
+//     const { conversationId } = req.params;
+//     const {
+//       limit: rawLimit = 20,
+//       before,               // key‑set cursor (createdAt or _id)
+//     } = req.query;
+
+//     /* ---------- 1.  Basic validation / sanitation ---------- */
+//     if (!mongoose.isValidObjectId(conversationId)) {
+//       return res.status(400).json({ success: false, message: "Invalid conversationId" });
+//     }
+//     const limit = Math.min(parseInt(rawLimit, 10) || 20, 100);  // hard cap
+
+//     /* ---------- 2.  Build a key‑set (no‑skip) filter ---------- */
+//     const filter = { conversationId };
+//     if (before) {
+//       // Accept either a timestamp or an ObjectId; ObjectId is monotonic
+//       filter.$or = [
+//         { createdAt: { $lt: new Date(before) } },
+//         { _id: { $lt: before } },
+//       ];
+//     }
+
+//     /* ---------- 3.  Run the lean query ---------- */
+//     const messages = await Message.find(filter)
+//       .sort({ createdAt: -1, _id: -1 })   // compound sort matches index
+//       .limit(limit)
+//       .select("-__v")                     // projection: drop noise
+//       .lean()                             // plain JS objects → ~30‑40 % faster
+//       .exec();
+
+//     res.json({ success: true, count: messages.length, messages });
+//   } catch (err) {
+//     /* Pass to a global error handler so you don't silently swallow stack traces */
+//     next(err);
+//   }
+// };
 
 export const startConversation = async (req, res) => {
   try {
