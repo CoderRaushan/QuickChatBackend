@@ -294,7 +294,7 @@ import { getPresignedUrl } from "../utils/getPresignedUrl.js"
 //     return res.status(500).json({ message: "Internal server error", success: false });
 //   }
 // };
-export const getMessages = async (req, res, next) => {
+export const GetMessage = async (req, res, next) => {
   try {
     const { conversationId } = req.params;
     const {
