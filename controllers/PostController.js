@@ -54,19 +54,49 @@ export const AddNewPost = async (req, res) => {
   }
 };
 //getall posts
+// export const GetAllPosts = async (req, res) => {
+//   try {
+//     const posts = await Post.find()
+//       .populate({ path: 'author', select: 'username profilePicture bio' })
+//       .populate({ path: 'comments', populate: { path: 'author', select: 'username profilePicture' } })
+//       .sort({ createdAt: -1 });
+//     return res.status(200).json({
+//       message:"Posts Fetched!",
+//       success: true,
+//       posts,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       message: "Internal server error!",
+//       success: false
+//     });
+//   }
+// };
+
 export const GetAllPosts = async (req, res) => {
   try {
+    // String to Number conversion with fallback defaults
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = parseInt(req.query.skip) || 0;
+     console.log("limit,skip",limit,skip)
     const posts = await Post.find()
+      .limit(limit)
+      .skip(skip)
       .populate({ path: 'author', select: 'username profilePicture bio' })
-      .populate({ path: 'comments', populate: { path: 'author', select: 'username profilePicture' } })
-      .sort({ createdAt: -1 });
+      .populate({
+        path: 'comments',
+        populate: { path: 'author', select: 'username profilePicture' }
+      })
+      .sort({ createdAt: -1 }); // Latest first
+
     return res.status(200).json({
-      message:"Posts Fetched!",
+      message: "Posts Fetched!",
       success: true,
       posts,
     });
   } catch (error) {
-    console.log(error);
+    console.error("GetAllPosts Error:", error);
     return res.status(500).json({
       message: "Internal server error!",
       success: false
