@@ -79,7 +79,6 @@ export const GetAllPosts = async (req, res) => {
     // String to Number conversion with fallback defaults
     const limit = parseInt(req.query.limit) || 5;
     const skip = parseInt(req.query.skip) || 0;
-     console.log("limit,skip",limit,skip)
     const posts = await Post.find()
       .limit(limit)
       .skip(skip)

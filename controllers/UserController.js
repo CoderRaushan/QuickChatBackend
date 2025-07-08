@@ -97,6 +97,21 @@ export const SendVarificationCodeToUserEmail = async (req, res) => {
 //   }
 // };
 
+export const SearchUser = async (req,res) => {
+  const { username } = req.body;
+
+  try {
+    const SearchedRes = await User.find({ username: username }).select("_id username name profilePicture bio");
+    res.status(200).json({
+      message:"User searched",
+      success:true,
+      searchedUser:SearchedRes
+    })
+    console.log(SearchedRes);
+  } catch (error) {
+    console.log(error)
+  }
+}
 
 export const ManualRegister = async (req, res) => {
   try {

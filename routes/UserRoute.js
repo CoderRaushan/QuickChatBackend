@@ -1,5 +1,5 @@
 import express from "express";
-import { EditProfile, FollowAndUnfollow, GetProfile, getSuggestedUsers, IsEmailFound, Login, ManualRegister,SendVarificationCodeToUserEmail, signout } from "../controllers/UserController.js";
+import { EditProfile, FollowAndUnfollow, GetProfile, getSuggestedUsers, IsEmailFound, Login, ManualRegister,SendVarificationCodeToUserEmail, signout,SearchUser } from "../controllers/UserController.js";
 import isAuthenticated from "../middlewares/IsAuther.js";
 import { upload } from "../CloudConfig/Cloudinary.js";
 const router = express.Router();
@@ -7,6 +7,8 @@ const router = express.Router();
 router.post('/verify-email',SendVarificationCodeToUserEmail);
 
 router.post('/signup',ManualRegister);
+
+router.post('/search',isAuthenticated,SearchUser);
 
 router.post('/signin',Login);
 
