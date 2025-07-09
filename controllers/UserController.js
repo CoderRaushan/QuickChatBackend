@@ -97,21 +97,46 @@ export const SendVarificationCodeToUserEmail = async (req, res) => {
 //   }
 // };
 
-export const SearchUser = async (req,res) => {
+// export const SearchUser = async (req,res) => {
+//   const { username } = req.body;
+
+//   try {
+//     const SearchedRes = await User.find({ username: username }).select("_id username name profilePicture bio");
+//     res.status(200).json({
+//       message:"User searched",
+//       success:true,
+//       searchedUser:SearchedRes
+//     })
+//     console.log(SearchedRes);
+//   } catch (error) {
+//     console.log(error)
+//   }
+// }
+export const SearchUser = async (req, res) => {
   const { username } = req.body;
 
   try {
-    const SearchedRes = await User.find({ username: username }).select("_id username name profilePicture bio");
+    // Case-insensitive search using regex
+    const SearchedRes = await User.find({
+      username: { $regex: username, $options: "i" } // "i" for case-insensitive
+    }).select("_id username name profilePicture bio");
+
     res.status(200).json({
-      message:"User searched",
-      success:true,
-      searchedUser:SearchedRes
-    })
+      message: "User(s) found",
+      success: true,
+      searchedUser: SearchedRes
+    });
+
     console.log(SearchedRes);
   } catch (error) {
-    console.log(error)
+    console.log(error);
+    res.status(500).json({
+      message: "Error searching users",
+      success: false,
+    });
   }
-}
+};
+
 
 export const ManualRegister = async (req, res) => {
   try {
