@@ -127,7 +127,6 @@ export const SearchUser = async (req, res) => {
       searchedUser: SearchedRes
     });
 
-    console.log(SearchedRes);
   } catch (error) {
     console.log(error);
     res.status(500).json({
