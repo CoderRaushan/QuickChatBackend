@@ -118,7 +118,6 @@ export const GetAllExploreVideoPosts = async (req, res) => {
         populate: { path: 'author', select: 'username profilePicture' }
       })
       .sort({ createdAt: -1 });
-     console.log(videoPosts);
     return res.status(200).json({
       message: "Video posts fetched successfully!",
       success: true,
