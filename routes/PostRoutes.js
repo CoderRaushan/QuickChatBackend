@@ -5,7 +5,8 @@ import
 {
     AddComment,AddNewPost,BookmarkPost,
     DisLikePost,GetAllPosts,GetUserPost,
-    LikePost,GetCommentsOfPost, DeletePost
+    LikePost,GetCommentsOfPost, DeletePost,
+    GetAllExploreVideoPosts
 } 
 from '../controllers/PostController.js';
 
@@ -20,5 +21,6 @@ router.route('/:id/comment').post(isAuthenticated, AddComment);
 router.route('/:id/comment/all').get(isAuthenticated, GetCommentsOfPost);
 router.route('/delete/:id').delete(isAuthenticated, DeletePost);
 router.route('/:id/bookmark').post(isAuthenticated, BookmarkPost);
+router.route('/explore/videos').get(GetAllExploreVideoPosts);
 
 export default router;

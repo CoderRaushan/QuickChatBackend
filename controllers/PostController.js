@@ -1,24 +1,24 @@
 import Post from "../models/PostModel.js";
 import User from "../models/UserModel.js";
 import Comment from "../models/CommentModel.js";
-import { getReceiverSocketId, io} from "../socket/socket.js";
+import { getReceiverSocketId, io } from "../socket/socket.js";
 //add new post
 export const AddNewPost = async (req, res) => {
   try {
-    const { caption,fileUrl,mimetype,filename,size } = req.body;
+    const { caption, fileUrl, mimetype, filename, size } = req.body;
     const author = req.id;
-    const PostPicture=fileUrl;
-    if (!caption || !PostPicture || !author || !mimetype|| !filename || !size) {
+    const PostPicture = fileUrl;
+    if (!caption || !PostPicture || !author || !mimetype || !filename || !size) {
       return res.status(400).json({
         message: "Please fill in all fields",
-        success: false, 
+        success: false,
       });
     }
 
     // Create the post
     const post = await Post.create({
       caption,
-      file:{url:fileUrl,filename,size,mimetype},
+      file: { url: fileUrl, filename, size, mimetype },
       author,
     });
 
@@ -102,17 +102,47 @@ export const GetAllPosts = async (req, res) => {
     });
   }
 };
+export const GetAllExploreVideoPosts = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 6;  // Default limit = 6 posts
+    const skip = parseInt(req.query.skip) || 0;
+
+    const videoPosts = await Post.find({
+      "file.mimetype": { $regex: "^video/" }
+    })
+      .limit(limit)
+      .skip(skip)
+      .populate({ path: 'author', select: 'username profilePicture bio' })
+      .populate({
+        path: 'comments',
+        populate: { path: 'author', select: 'username profilePicture' }
+      })
+      .sort({ createdAt: -1 });
+     console.log(videoPosts);
+    return res.status(200).json({
+      message: "Video posts fetched successfully!",
+      success: true,
+      posts: videoPosts,
+    });
+  } catch (error) {
+    console.error("GetVideoPosts Error:", error);
+    return res.status(500).json({
+      message: "Internal server error!",
+      success: false
+    });
+  }
+};
 //getuserposts
 export const GetUserPost = async (req, res) => {
   try {
     const authorId = req.id;
     const posts = await Post.find({ author: authorId })
       .populate({ path: 'author', select: 'username profilePicture' })
-      .populate({ path: 'comments',model: "Comment", populate: { path: 'author', select: 'username profilePicture' } })
+      .populate({ path: 'comments', model: "Comment", populate: { path: 'author', select: 'username profilePicture' } })
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
-      message:"All User Posts Fetched!",
+      message: "All User Posts Fetched!",
       success: true,
       posts
     });
@@ -140,21 +170,20 @@ export const LikePost = async (req, res) => {
     await post.updateOne({ $addToSet: { likes: likeKrneWalaUserKiId } });
     await post.save();
     // Implement socket.io for real-time notification (if needed)
-    const user=await User.findById(likeKrneWalaUserKiId).select("username profilePicture");
-    const OwnerId=post.author.toString();
-    const ReceiverSocketId=getReceiverSocketId(OwnerId);
-    if(OwnerId !== likeKrneWalaUserKiId)
-    {
-      const Notification={
-        type:"like",
-        userId:likeKrneWalaUserKiId,
-        userDetails:user,
+    const user = await User.findById(likeKrneWalaUserKiId).select("username profilePicture");
+    const OwnerId = post.author.toString();
+    const ReceiverSocketId = getReceiverSocketId(OwnerId);
+    if (OwnerId !== likeKrneWalaUserKiId) {
+      const Notification = {
+        type: "like",
+        userId: likeKrneWalaUserKiId,
+        userDetails: user,
         postId,
-        message:"your post was liked!"
+        message: "your post was liked!"
       }
-      io.to(ReceiverSocketId).emit("notification",Notification);
+      io.to(ReceiverSocketId).emit("notification", Notification);
     }
-    
+
     return res.status(200).json({
       message: 'Post liked!',
       success: true
@@ -180,25 +209,24 @@ export const DisLikePost = async (req, res) => {
       });
     }
     // Like logic
-    await post.updateOne({ $pull:{ likes: likeKrneWalaUserKiId } });
+    await post.updateOne({ $pull: { likes: likeKrneWalaUserKiId } });
     await post.save();
     // Implement socket.io for real-time notification (if needed)
 
-    const user=await User.findById(likeKrneWalaUserKiId).select("_id username profilePicture");
-    const OwnerId=post.author.toString();
-    const ReceiverSocketId=getReceiverSocketId(OwnerId);
-    if(OwnerId !== likeKrneWalaUserKiId)
-    {
-      const Notification={
-        type:"dislike",
-        userId:likeKrneWalaUserKiId,
-        userDetails:user, 
+    const user = await User.findById(likeKrneWalaUserKiId).select("_id username profilePicture");
+    const OwnerId = post.author.toString();
+    const ReceiverSocketId = getReceiverSocketId(OwnerId);
+    if (OwnerId !== likeKrneWalaUserKiId) {
+      const Notification = {
+        type: "dislike",
+        userId: likeKrneWalaUserKiId,
+        userDetails: user,
         postId,
-        message:"your post was dislike!"
+        message: "your post was dislike!"
       }
-      io.to(ReceiverSocketId).emit("notification",Notification);
+      io.to(ReceiverSocketId).emit("notification", Notification);
     }
-   
+
     return res.status(200).json({
       message: 'Post disliked!',
       success: true
@@ -217,8 +245,7 @@ export const AddComment = async (req, res) => {
     const postId = req.params.id;
     const commentKrneWalaUserKiId = req.id;
     const { text } = req.body;
-    if (!text) 
-    {  
+    if (!text) {
       return res.status(400).json({
         message: 'Text is required',
         success: false
@@ -247,7 +274,7 @@ export const AddComment = async (req, res) => {
     return res.status(201).json({
       message: 'Comment added!',
       success: true,
-      comment 
+      comment
     });
   } catch (error) {
     console.log(error);
@@ -262,7 +289,7 @@ export const GetCommentsOfPost = async (req, res) => {
   try {
     const postId = req.params.id;
     const comments = await Comment.find({ post: postId })
-    .populate({path:'author', select: "username profilePicture"});
+      .populate({ path: 'author', select: "username profilePicture" });
 
     if (!comments || comments.length === 0) {
       return res.status(404).json({
@@ -272,7 +299,7 @@ export const GetCommentsOfPost = async (req, res) => {
     }
 
     return res.status(200).json({
-      message:"Comment Added!",
+      message: "Comment Added!",
       success: true,
       comments
     });
@@ -316,7 +343,7 @@ export const DeletePost = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Post deleted',
-      
+
     });
   } catch (error) {
     console.log(error);
@@ -331,7 +358,7 @@ export const BookmarkPost = async (req, res) => {
   try {
     const postId = req.params.id;
     const authorId = req.id;
-    const post = await Post.findById(postId);  
+    const post = await Post.findById(postId);
     if (!post) {
       return res.status(404).json({
         message: 'Post not found',
@@ -341,7 +368,7 @@ export const BookmarkPost = async (req, res) => {
     const user = await User.findById(authorId);
     if (user.bookmarks.includes(post._id)) {
       // Already bookmarked - remove from the bookmark
-      await user.updateOne({$pull:{bookmarks:post._id}});
+      await user.updateOne({ $pull: { bookmarks: post._id } });
       await user.save();
       return res.status(200).json({
         message: 'Post removed from bookmark',
@@ -349,7 +376,7 @@ export const BookmarkPost = async (req, res) => {
       });
     }
     // Bookmark the post
-    await user.updateOne({$addToSet:{bookmarks:post._id}});
+    await user.updateOne({ $addToSet: { bookmarks: post._id } });
     await user.save();
     return res.status(200).json({
       message: 'Post bookmarked',
@@ -363,3 +390,4 @@ export const BookmarkPost = async (req, res) => {
     });
   }
 };
+///user/post/explore/videos
