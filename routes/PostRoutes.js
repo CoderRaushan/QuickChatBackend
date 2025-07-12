@@ -6,6 +6,7 @@ import
     AddComment,AddNewPost,BookmarkPost,
     DisLikePost,GetAllPosts,GetUserPost,
     LikePost,GetCommentsOfPost, DeletePost,
+    specificpost,
     GetAllExploreVideoPosts
 } 
 from '../controllers/PostController.js';
@@ -14,7 +15,8 @@ const router = express.Router();
 // router.route('/add').post(isAuthenticated,upload.single('image'), AddNewPost);
 router.route('/add').post(isAuthenticated, AddNewPost);
 router.route('/all').get(GetAllPosts);
-router.route('/userpost/all').get(isAuthenticated, GetUserPost);    
+router.route('/userpost/all').get(isAuthenticated, GetUserPost);
+router.route('/get/specificpost/:id').get(isAuthenticated, specificpost);
 router.route('/:id/like').get(isAuthenticated, LikePost);
 router.route('/:id/dislike').get(isAuthenticated, DisLikePost);
 router.route('/:id/comment').post(isAuthenticated, AddComment);

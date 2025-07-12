@@ -328,7 +328,6 @@ export const GetProfile = async (req, res) => {
       .select("-password")
       .populate({
         path: "following",
-        // select: "_id name username profilePicture"
       })
       .populate({
         path: "followers",

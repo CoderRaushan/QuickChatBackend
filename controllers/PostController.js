@@ -132,6 +132,38 @@ export const GetAllExploreVideoPosts = async (req, res) => {
   }
 };
 //getuserposts
+
+
+
+export const specificpost = async (req, res) => {
+  try {
+    const  postId= req.params.id;
+    const post = await Post.findById(postId)
+      .populate({ path: 'author', select: 'username profilePicture' })
+      .populate({ path: 'comments', model: "Comment", populate: { path: 'author', select: 'username profilePicture' } })
+      .sort({ createdAt: -1 });
+
+    if (!post) {
+      return res.status(404).json({
+        message: "Post not found!",
+        success: false
+      });
+    }
+
+    return res.status(200).json({
+      message: "Specific Post Fetched!",
+      success: true,
+      post
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "Internal server error!",
+      success: false
+    });
+  }
+};
+
 export const GetUserPost = async (req, res) => {
   try {
     const authorId = req.id;
@@ -154,6 +186,7 @@ export const GetUserPost = async (req, res) => {
   }
 };
 //like post
+
 export const LikePost = async (req, res) => {
   try {
     const likeKrneWalaUserKiId = req.id;
@@ -166,8 +199,8 @@ export const LikePost = async (req, res) => {
       });
     }
     // Like logic
-    await post.updateOne({ $addToSet: { likes: likeKrneWalaUserKiId } });
-    await post.save();
+   await post.updateOne({ $addToSet: { likes: likeKrneWalaUserKiId } });
+   await post.save();
     // Implement socket.io for real-time notification (if needed)
     const user = await User.findById(likeKrneWalaUserKiId).select("username profilePicture");
     const OwnerId = post.author.toString();
@@ -201,6 +234,7 @@ export const DisLikePost = async (req, res) => {
     const likeKrneWalaUserKiId = req.id;
     const postId = req.params.id;
     const post = await Post.findById(postId);
+
     if (!post) {
       return res.status(404).json({
         message: 'Post not found',
@@ -208,10 +242,9 @@ export const DisLikePost = async (req, res) => {
       });
     }
     // Like logic
-    await post.updateOne({ $pull: { likes: likeKrneWalaUserKiId } });
-    await post.save();
+   await post.updateOne({ $pull: { likes: likeKrneWalaUserKiId } });
+   await post.save();
     // Implement socket.io for real-time notification (if needed)
-
     const user = await User.findById(likeKrneWalaUserKiId).select("_id username profilePicture");
     const OwnerId = post.author.toString();
     const ReceiverSocketId = getReceiverSocketId(OwnerId);
