@@ -503,7 +503,7 @@ export const FollowAndUnfollow = async (req, res) => {
           userId: IdOfUserWhichFollowsTargetUser,
           userDetails: user,
           author: authorUser,
-          message: "You are followed!"
+          message: "started following you."
         };
         io.to(ReceiverSocketId).emit("follow", Notification);
       }
