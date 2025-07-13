@@ -303,6 +303,19 @@ export const AddComment = async (req, res) => {
     post.comments.push(comment._id);
     await post.save();
 
+    const OwnerId = post.author.toString();
+    const ReceiverSocketId = getReceiverSocketId(OwnerId);
+    const user = await User.findById(commentKrneWalaUserKiId).select("_id username profilePicture");
+    if (OwnerId !== commentKrneWalaUserKiId) {
+      const Notification = {
+        type: "comment",
+        userId: commentKrneWalaUserKiId,
+        userDetails: user,
+        postId,
+        message: "your post was commented!"
+      }
+      io.to(ReceiverSocketId).emit("notification", Notification);
+    }
     return res.status(201).json({
       message: 'Comment added!',
       success: true,

@@ -472,7 +472,7 @@ export const FollowAndUnfollow = async (req, res) => {
           author: authorUser,
           message: "You are unfollowed!"
         };
-        io.to(ReceiverSocketId).emit("unfollow", Notification);
+        io.to(ReceiverSocketId).emit("notification", Notification);
       }
 
       return res.status(200).json({
@@ -498,13 +498,13 @@ export const FollowAndUnfollow = async (req, res) => {
 
       if (OwnerId !== IdOfUserWhichFollowsTargetUser) {
         const Notification = {
-          type: "follow", // ✅ Correct event name
+          type: "follow",
           userId: IdOfUserWhichFollowsTargetUser,
           userDetails: user,
           author: authorUser,
           message: "started following you."
         };
-        io.to(ReceiverSocketId).emit("follow", Notification);
+        io.to(ReceiverSocketId).emit("notification", Notification);
       }
 
       return res.status(200).json({
