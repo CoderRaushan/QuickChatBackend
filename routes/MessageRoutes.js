@@ -10,5 +10,6 @@ router.post('/get-upload-url', isAuthenticated, GetUploadURL);
 // router.post('/file/send/:id', isAuthenticated, SendFile);
 // router.post('/file/send/:id', isAuthenticated,upload.single("file"), SendFile);
 // router.get('/all/:id', isAuthenticated, GetMessage);
+
 router.get('/:conversationId', isAuthenticated, GetMessage);
 export default router;
