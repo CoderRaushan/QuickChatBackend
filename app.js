@@ -8,6 +8,7 @@ import { app,server } from "./socket/socket.js";
 import UserRouter from "./routes/UserRoute.js";
 import PostRouter from "./routes/PostRoutes.js";
 import MessageRouter from "./routes/MessageRoutes.js";
+import StoryRouter from "./routes/StoryRoute.js";
 // passport configurations for google
 import passport from "passport";
 import googleRoute from "./routes/googleRoutes.js";
@@ -50,6 +51,7 @@ app.use('/auth',UserRouter);
 app.use('/user',UserRouter);
 app.use("/user/post",PostRouter);
 app.use("/user/message",MessageRouter);
+app.use("/user/story",StoryRouter);
 const port = process.env.PORT || 4234;
 server.listen(port, () => {
   console.log(`app is listening on port http://localhost:${port}`);
