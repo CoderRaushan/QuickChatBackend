@@ -100,6 +100,51 @@ io.on("connection", (socket) => {
       io.to(receiverSocketId).emit("stop-typing", { from: userId });
     }
   });
+  socket.on("offer", ({ from, to, offer }) => {
+    console.log({ from, to, offer });
+    const receiverSocketId = UserSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("offer", { from, to, offer });
+    }
+  });
+
+  socket.on("answer", ({ from, to, answer }) => {
+    const receiverSocketId = UserSocketMap[from];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("answer", {
+        from,
+        to,
+        answer
+      })
+    }
+  });
+  socket.on("icecandidate", ({ candidate, to }) => {
+    io.to(to).emit("icecandidate", candidate);
+  });
+
+  socket.on("call-user", ({ from, to, userInfo }) => {
+  const receiverSocketId = UserSocketMap[to];
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("incoming-call", {
+      from,
+      userInfo, // Optional: name, image etc.
+    });
+  }
+});
+
+socket.on("call-accepted", ({ from, to }) => {
+  const callerSocketId = UserSocketMap[from];
+  if (callerSocketId) {
+    io.to(callerSocketId).emit("call-accepted", { to });
+  }
+});
+
+socket.on("call-rejected", ({ from, to }) => {
+  const callerSocketId = UserSocketMap[from];
+  if (callerSocketId) {
+    io.to(callerSocketId).emit("call-rejected", { to });
+  }
+});
 
 
   socket.on("disconnect", () => {
