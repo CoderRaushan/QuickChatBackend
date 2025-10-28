@@ -40,16 +40,6 @@ const UserSchema = new mongoose.Schema(
     },
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    // providers: [
-    //   {
-    //     providerName: {
-    //       type: String,
-    //     },
-    //     providerId: {
-    //       type: String,
-    //     },
-    //   },
-    // ],
     posts: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -60,8 +50,6 @@ const UserSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
-// UserSchema.index({ "providers.providerName": 1, "providers.providerId": 1 }, { unique: true });
 
 const User = mongoose.model("User", UserSchema);
 
