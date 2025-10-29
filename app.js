@@ -9,26 +9,7 @@ import UserRouter from "./routes/UserRoute.js";
 import PostRouter from "./routes/PostRoutes.js";
 import MessageRouter from "./routes/MessageRoutes.js";
 import StoryRouter from "./routes/StoryRoute.js";
-// passport configurations for google
-import passport from "passport";
-import googleRoute from "./routes/googleRoutes.js";
-import './AuthConfig/passportGoogle.js';
-app.use(passport.initialize());
-app.use(googleRoute);
-// for github
-import githubRoutes from "./routes/githubRoutes.js";
-import './AuthConfig/passportGitHub.js';
-app.use(githubRoutes);
-// for facebook
 
-// for linkedin
-import "./AuthConfig/passportLinkedin.js";
-import LinkedinRoutes from "./routes/LinkedinRoutes.js"
-app.use(LinkedinRoutes);
-// for github
-import youtubeRoutes from "./routes/YoutubeRoutes.js";
-import './AuthConfig/passportYoutube.js';
-app.use(youtubeRoutes);
 // end pasport config
 app.use(express.json());
 app.use(cookieParser());
@@ -37,7 +18,6 @@ const corsOptions={
     origin:["http://localhost:5173","https://rausinsta.netlify.app"],
     credentials:true,
 }
-
 app.use(cors(corsOptions));
 const MONGODB_URI = process.env.MONGODB_URI;
 try {
